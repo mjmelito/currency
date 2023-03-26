@@ -37,7 +37,11 @@ function printElements(results) {
 }
 
 function printError(error) {
-  document.querySelector('#response').innerText = `Sorry! There was an error accessing the exchange rate data for ${error[3]}: ${error[0].status} ${error[0].statusText}`;
+  if (error[1]['error-type'] === 'unsupported-code') {
+    document.querySelector('#response').innerText = `Sorry! ${error[3]} is not a supported currency code.`;
+  } else {
+    document.querySelector('#response').innerText = `Sorry! There was an error accessing the exchange rate data for ${error[3]}: ${error[0].status} ${error[0].statusText}`;
+  }
 }
 
 
