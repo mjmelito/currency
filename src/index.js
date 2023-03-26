@@ -1,27 +1,13 @@
 import 'bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './css/styles.css';
-import './exchange.js';
+import ExchangeService from './exchange-service.js';
 
 
 // // Business Logic
 
 function exchange(dollar, currency) {
-  let promise = new Promise(function(resolve, reject) {
-    let request = new XMLHttpRequest();
-    const url =`https://v6.exchangerate-api.com/v6/${process.env.API_KEY}/pair/USD/${currency}/${dollar}`;
-    request.addEventListener("loadend", function() {
-      const response = JSON.parse(this.responseText);
-      if (this.status === 200) {
-        resolve([response, dollar, currency]);
-      } else {
-        reject([this, response, dollar, currency]);
-      }
-    });
-    request.open("GET", url, true);
-    request.send();
-  });
-
+  let promise = ExchangeService.exchange(dollar, currency);
   promise.then(function(response) {
     printElements(response, dollar, currency);
   }, function(errorMessage) {
@@ -33,10 +19,16 @@ function exchange(dollar, currency) {
 // UI Logic
 
 function printElements(results) {
-  document.querySelector('#response').innerText = `${results[1]} USD is equal to ${results[0].conversion_result} ${results[2]}.`;
+  if (results[0].conversion_result === undefined) {
+    document.querySelector('#response').setAttribute('class', 'bg-danger');
+    document.querySelector('#response').innerText = `It appears you haven't entered an amount to calculate. Please double check that you have completed the form above`;
+  } else {
+    document.querySelector('#response').innerText = `${results[1]} USD is equal to ${results[0].conversion_result} ${results[2]}.`;
+  }
 }
 
 function printError(error) {
+  document.querySelector('#response').setAttribute('class', 'bg-danger');
   if (error[1]['error-type'] === 'unsupported-code') {
     document.querySelector('#response').innerText = `Sorry! ${error[3]} is not a supported currency code.`;
   } else {
@@ -50,6 +42,7 @@ function handleFormSubmission(event) {
   const dollar = document.querySelector('#dollar').value;
   const currency = document.querySelector('#currency').value;
   exchange(dollar, currency);
+  document.querySelector('#response').removeAttribute('class');
 }
 
 window.addEventListener("load", function() {
